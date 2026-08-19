@@ -1,36 +1,32 @@
-const CACHE_NAME = 'plantao-24x72-v3';
-const ASSETS = [
+const CACHE_NAME = 'escala24x72-v1';
+const ARQUIVOS = [
   './index.html',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
+  './manifest.json'
 ];
-
+ 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ARQUIVOS))
   );
   self.skipWaiting();
 });
-
+ 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+    caches.keys().then((chaves) =>
+      Promise.all(
+        chaves
+          .filter((chave) => chave !== CACHE_NAME)
+          .map((chave) => caches.delete(chave))
+      )
     )
   );
   self.clients.claim();
 });
-
+ 
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      return cached || fetch(event.request).then((response) => {
-        return caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, response.clone());
-          return response;
-        });
-      }).catch(() => cached);
-    })
+    caches.match(event.request).then((resposta) => resposta || fetch(event.request))
   );
 });
+ 
