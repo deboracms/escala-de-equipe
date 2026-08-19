@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -89,6 +88,29 @@
       background-color: #0369a1;
     }
 
+    /* Botão de alternância de visualização */
+    .toolbar {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 0.75rem;
+    }
+
+    .btn-toggle {
+      background-color: #f1f5f9;
+      color: var(--primary-color);
+      border: 1px solid var(--primary-color);
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-toggle:hover {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
     /* Tabela de Escala */
     .table-container {
       overflow-x: auto;
@@ -123,6 +145,69 @@
       border-radius: 4px;
       cursor: pointer;
     }
+
+    /* Visão por Profissional */
+    #view-equipe {
+      display: none;
+    }
+
+    .profissional-card {
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .profissional-card h3 {
+      margin: 0 0 0.5rem 0;
+      color: var(--text-color);
+      font-size: 1.05rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .profissional-card .badge {
+      background-color: var(--primary-color);
+      color: white;
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+
+    .plantao-item {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 6px 0;
+      border-top: 1px dashed var(--border-color);
+      font-size: 0.9rem;
+    }
+
+    .plantao-item:first-of-type {
+      border-top: none;
+    }
+
+    .plantao-item .dia {
+      font-weight: bold;
+      min-width: 70px;
+    }
+
+    .plantao-item .local {
+      flex: 1;
+      min-width: 140px;
+    }
+
+    .plantao-item .horario {
+      color: #475569;
+    }
+
+    .empty-msg {
+      text-align: center;
+      color: #64748b;
+      padding: 1rem;
+    }
   </style>
 </head>
 <body>
@@ -145,8 +230,12 @@
         <button class="btn-add" onclick="adicionarPlantao()">Adicionar</button>
       </div>
 
-      <!-- Tabela para Listagem -->
-      <div class="table-container">
+      <div class="toolbar">
+        <button class="btn-toggle" id="btn-toggle-view" onclick="alternarVisualizacao()">👥 Ver por Profissional</button>
+      </div>
+
+      <!-- Tabela para Listagem (visão por dia) -->
+      <div class="table-container" id="view-tabela">
         <table>
           <thead>
             <tr>
@@ -162,19 +251,28 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Visão agrupada por profissional -->
+      <div id="view-equipe"></div>
     </section>
   </main>
 
   <script>
     // Carregar os plantões armazenados ou usar dados iniciais de padrão
-    let plantoes = JSON.parse(localStorage.getItem('escala_plantoes')) || [
-      { id: 1, dia: "01", nome: "Dra. Ana Silva", local: "Hospital Central", horario: "07:00 - 19:00" },
-      { id: 2, dia: "02", nome: "Dr. Carlos Eduardo", local: "Posto de Saúde A", horario: "19:00 - 07:00" }
-    ];
+    let plantoes = JSON.parse(localStorage.getItem('escala_plantoes')) || [];
+
+    let visualizacaoAtual = 'tabela'; // 'tabela' ou 'equipe'
 
     function renderizarTabela() {
       const tbody = document.getElementById('tabela-corpo');
       tbody.innerHTML = '';
+
+      if (plantoes.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Nenhum plantão cadastrado ainda. Use o formulário acima para adicionar.</td></tr>';
+        renderizarVisaoEquipe();
+        localStorage.setItem('escala_plantoes', JSON.stringify(plantoes));
+        return;
+      }
 
       // Ordena os plantões pelo dia do mês
       plantoes.sort((a, b) => parseInt(a.dia) - parseInt(b.dia));
@@ -195,6 +293,70 @@
 
       // Salva no armazenamento do navegador
       localStorage.setItem('escala_plantoes', JSON.stringify(plantoes));
+
+      // Mantém a visão por equipe atualizada também
+      renderizarVisaoEquipe();
+    }
+
+    function renderizarVisaoEquipe() {
+      const container = document.getElementById('view-equipe');
+      container.innerHTML = '';
+
+      if (plantoes.length === 0) {
+        container.innerHTML = '<p class="empty-msg">Nenhum plantão cadastrado ainda.</p>';
+        return;
+      }
+
+      // Agrupa os plantões por profissional
+      const grupos = {};
+      plantoes.forEach(p => {
+        if (!grupos[p.nome]) grupos[p.nome] = [];
+        grupos[p.nome].push(p);
+      });
+
+      // Ordena os nomes alfabeticamente
+      const nomes = Object.keys(grupos).sort((a, b) => a.localeCompare(b));
+
+      nomes.forEach(nome => {
+        const turnos = grupos[nome].sort((a, b) => parseInt(a.dia) - parseInt(b.dia));
+
+        const card = document.createElement('div');
+        card.className = 'profissional-card';
+
+        const itensHtml = turnos.map(p => `
+          <div class="plantao-item">
+            <span class="dia">Dia ${p.dia}</span>
+            <span class="local">📍 ${p.local}</span>
+            <span class="horario">🕒 ${p.horario}</span>
+          </div>
+        `).join('');
+
+        card.innerHTML = `
+          <h3>${nome} <span class="badge">${turnos.length} plantão(ões)</span></h3>
+          ${itensHtml}
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    function alternarVisualizacao() {
+      const viewTabela = document.getElementById('view-tabela');
+      const viewEquipe = document.getElementById('view-equipe');
+      const btn = document.getElementById('btn-toggle-view');
+
+      if (visualizacaoAtual === 'tabela') {
+        viewTabela.style.display = 'none';
+        viewEquipe.style.display = 'block';
+        btn.textContent = '📅 Ver por Dia';
+        visualizacaoAtual = 'equipe';
+        renderizarVisaoEquipe();
+      } else {
+        viewTabela.style.display = 'block';
+        viewEquipe.style.display = 'none';
+        btn.textContent = '👥 Ver por Profissional';
+        visualizacaoAtual = 'tabela';
+      }
     }
 
     function adicionarPlantao() {
