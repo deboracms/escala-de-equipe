@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Escala 24x72</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d131b">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Plantão">
+<style>
+  #installBar{position:fixed;left:0;right:0;bottom:0;background:#161f2c;border-top:1px solid #2a3547;padding:12px 16px;display:none;align-items:center;justify-content:space-between;gap:10px;z-index:100;font-family:'Inter',sans-serif;}
+  #installBar span{font-size:13px;color:#e9eef5;}
+  #installBar button{background:#e9eef5;color:#0d131b;border:none;padding:9px 14px;border-radius:9px;font-weight:700;font-size:13px;cursor:pointer;}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0d131b;
+    --surface:#161f2c;
+    --surface-2:#1d2939;
+    --border:#2a3547;
+    --text:#e9eef5;
+    --muted:#8a97ab;
+    --plantao:#ffb020;
+    --plantao-soft:rgba(255,176,32,0.14);
+    --permuta:#22d3ee;
+    --permuta-soft:rgba(34,211,238,0.14);
+    --ferias:#b18cf9;
+    --ferias-soft:rgba(177,140,249,0.16);
+    --folga-border:#33415a;
+    --danger:#f87171;
+    --radius:14px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;}
+  body{min-height:100vh;padding-bottom:40px;}
+  .app{max-width:460px;margin:0 auto;padding:20px 16px 8px;}
+
+  header.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:8px;}
+  .brand{display:flex;flex-direction:column;}
+  .brand .kicker{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600;}
+  .brand h1{font-family:'Space Grotesk',sans-serif;font-size:22px;margin:2px 0 0;font-weight:700;letter-spacing:-0.01em;}
+  .icon-group{display:flex;gap:8px;flex-shrink:0;}
+  .icon-btn{background:var(--surface);border:1px solid var(--border);color:var(--text);width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;}
+  .icon-btn:active{background:var(--surface-2);}
+
+  .cycle-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px;}
+  .cycle-top{display:flex;align-items:center;gap:16px;}
+  .ring-wrap{position:relative;width:64px;height:64px;flex-shrink:0;}
+  .ring-wrap svg{width:100%;height:100%;transform:rotate(-90deg);}
+  .ring-wrap .seg{fill:none;stroke-width:7;}
+  .ring-center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;}
+  .ring-center .num{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;line-height:1;}
+  .ring-center .den{font-size:8px;color:var(--muted);letter-spacing:.06em;}
+  .cycle-info .status-label{font-family:'Space Grotesk',sans-serif;font-size:15.5px;font-weight:600;margin-bottom:2px;}
+  .cycle-info .status-sub{font-size:12px;color:var(--muted);}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle;flex-shrink:0;}
+
+  .today-team{margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;}
+  .today-team .trow{display:flex;align-items:center;font-size:12.5px;justify-content:space-between;gap:6px;}
+  .today-team .trow .pname{color:var(--muted);}
+  .today-team .trow .ploc{font-weight:600;text-align:right;}
+
+  .nav-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .nav-row .month-label{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:600;text-transform:capitalize;}
+  .nav-btns{display:flex;gap:8px;}
+  .nav-btns button{background:var(--surface);border:1px solid var(--border);color:var(--text);width:34px;height:34px;border-radius:10px;cursor:pointer;font-size:15px;}
+  .today-btn{background:var(--surface);border:1px solid var(--border);color:var(--muted);font-size:11px;padding:6px 10px;border-radius:8px;cursor:pointer;font-weight:600;letter-spacing:.03em;}
+
+  .legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;}
+  .legend span{font-size:11.5px;color:var(--muted);display:flex;align-items:center;}
+
+  .weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px;}
+  .weekdays div{text-align:center;font-size:10.5px;color:var(--muted);font-weight:600;letter-spacing:.04em;}
+
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:20px;}
+  .cell{aspect-ratio:1/1;border-radius:11px;border:1.5px solid var(--folga-border);background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;cursor:pointer;padding:2px;}
+  .cell.pad{visibility:hidden;pointer-events:none;}
+  .cell .n{font-size:13px;font-weight:600;}
+  .cell .marks{position:absolute;bottom:4px;display:flex;gap:2px;}
+  .cell .marks span{width:4px;height:4px;border-radius:50%;}
+  .cell.plantao{background:var(--plantao-soft);border-color:var(--plantao);}
+  .cell.today{box-shadow:0 0 0 2px var(--text) inset;}
+  .cell:active{transform:scale(0.94);}
+
+  .section-toggle{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;}
+  .range-panel{background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius) var(--radius);padding:16px;display:none;margin-top:-1px;}
+  .range-panel.open{display:block;}
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:11.5px;color:var(--muted);margin-bottom:6px;font-weight:600;letter-spacing:.02em;}
+  input[type=date], input[type=text], select{width:100%;background:var(--surface-2);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:9px;font-size:14px;font-family:'Inter',sans-serif;}
+  .type-pick{display:flex;gap:8px;}
+  .type-pick button{flex:1;padding:10px;border-radius:9px;border:1.5px solid var(--border);background:var(--surface-2);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;}
+  .type-pick button.sel-permuta{border-color:var(--permuta);background:var(--permuta-soft);}
+  .type-pick button.sel-ferias{border-color:var(--ferias);background:var(--ferias-soft);}
+  .row-btns{display:flex;gap:8px;margin-top:14px;}
+  .btn{flex:1;padding:11px;border-radius:9px;border:none;font-size:13.5px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;}
+  .btn-primary{background:var(--text);color:var(--bg);}
+  .btn-ghost{background:transparent;color:var(--danger);border:1.5px solid var(--danger);}
+  .hidden{display:none !important;}
+
+  .overlay{position:fixed;inset:0;background:rgba(4,7,11,0.7);display:none;align-items:flex-end;justify-content:center;z-index:50;}
+  .overlay.open{display:flex;}
+  .sheet{background:var(--surface);width:100%;max-width:460px;border-radius:18px 18px 0 0;padding:20px 18px 26px;border:1px solid var(--border);border-bottom:none;max-height:88vh;overflow-y:auto;}
+  .sheet h3{font-family:'Space Grotesk',sans-serif;margin:0 0 4px;font-size:17px;}
+  .sheet .sub{color:var(--muted);font-size:12.5px;margin-bottom:16px;}
+  .opt-btn{width:100%;text-align:left;background:var(--surface-2);border:1.5px solid var(--border);color:var(--text);padding:13px 14px;border-radius:11px;margin-bottom:8px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;}
+  .opt-btn .dot{margin-right:10px;}
+  .opt-btn.remove{color:var(--danger);border-color:var(--danger);background:transparent;}
+  .close-sheet{width:100%;padding:12px;background:transparent;border:none;color:var(--muted);font-size:13px;margin-top:6px;cursor:pointer;}
+
+  .person-row{display:flex;align-items:center;justify-content:space-between;background:var(--surface-2);border:1.5px solid var(--border);border-radius:11px;padding:11px 13px;margin-bottom:8px;cursor:pointer;}
+  .person-row .pinfo{display:flex;flex-direction:column;}
+  .person-row .pinfo .nm{font-size:14px;font-weight:600;}
+  .person-row .pinfo .lc{font-size:11.5px;color:var(--muted);margin-top:2px;}
+  .person-row.tag-permuta{border-color:var(--permuta);}
+  .person-row.tag-ferias{border-color:var(--ferias);}
+  .person-row .chev{color:var(--muted);}
+
+  .settings-field{margin-bottom:14px;}
+  .settings-field label{display:block;font-size:11.5px;color:var(--muted);margin-bottom:6px;font-weight:600;}
+  .team-grid{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:14px;}
+  .team-pair{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .save-msg{font-size:11px;color:var(--muted);text-align:center;margin-top:6px;height:14px;}
+  .back-link{font-size:12px;color:var(--muted);margin-bottom:10px;display:inline-block;cursor:pointer;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <div class="brand">
+      <span class="kicker">Escala de serviço</span>
+      <h1>Plantão 24×72</h1>
+    </div>
+    <div class="icon-group">
+      <button class="icon-btn" id="teamBtn" aria-label="Equipe e locais">👥</button>
+      <button class="icon-btn" id="settingsBtn" aria-label="Configurações">⚙️</button>
+    </div>
+  </header>
+
+  <div class="cycle-card">
+    <div class="cycle-top">
+      <div class="ring-wrap">
+        <svg viewBox="0 0 64 64">
+          <g id="ringSegs"></g>
+        </svg>
+        <div class="ring-center">
+          <div class="num" id="ringDay">1</div>
+          <div class="den">DE 4</div>
+        </div>
+      </div>
+      <div class="cycle-info">
+        <div class="status-label" id="todayLabel">—</div>
+        <div class="status-sub" id="todaySub">carregando…</div>
+      </div>
+    </div>
+    <div class="today-team hidden" id="todayTeam"></div>
+  </div>
+
+  <div class="nav-row">
+    <div class="month-label" id="monthLabel">—</div>
+    <div class="nav-btns">
+      <button id="prevBtn">‹</button>
+      <button class="today-btn" id="todayBtn">HOJE</button>
+      <button id="nextBtn">›</button>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><span class="dot" style="background:var(--plantao)"></span>Dia de plantão</span>
+    <span><span class="dot" style="background:var(--permuta)"></span>Permuta</span>
+    <span><span class="dot" style="background:var(--ferias)"></span>Férias</span>
+  </div>
+
+  <div class="weekdays">
+    <div>D</div><div>S</div><div>T</div><div>Q</div><div>Q</div><div>S</div><div>S</div>
+  </div>
+  <div class="grid" id="grid"></div>
+
+  <button class="section-toggle" id="rangeToggle">
+    <span>Marcar período (permuta / férias)</span>
+    <span id="rangeChevron">▾</span>
+  </button>
+  <div class="range-panel" id="rangePanel">
+    <div class="field">
+      <label>Pessoa</label>
+      <select id="rangePerson"></select>
+    </div>
+    <div class="field">
+      <label>Data inicial</label>
+      <input type="date" id="rangeStart">
+    </div>
+    <div class="field">
+      <label>Data final</label>
+      <input type="date" id="rangeEnd">
+    </div>
+    <div class="field">
+      <label>Tipo</label>
+      <div class="type-pick">
+        <button type="button" id="pickPermuta" data-type="permuta">Permuta</button>
+        <button type="button" id="pickFerias" data-type="ferias">Férias</button>
+      </div>
+    </div>
+    <div class="field hidden" id="substituteField">
+      <label>Quem cobre (opcional)</label>
+      <input type="text" id="substituteInput" placeholder="Nome de quem vai cobrir">
+    </div>
+    <div class="row-btns">
+      <button class="btn btn-ghost" id="clearRangeBtn">Limpar período</button>
+      <button class="btn btn-primary" id="applyRangeBtn">Aplicar</button>
+    </div>
+    <div class="save-msg" id="rangeMsg"></div>
+  </div>
+</div>
+
+<!-- Modal: day (team view) -->
+<div class="overlay" id="dayOverlay">
+  <div class="sheet">
+    <h3 id="dayTitle">Data</h3>
+    <div class="sub" id="daySub">Escala do dia</div>
+    <div id="dayTeamList"></div>
+    <button class="close-sheet" id="dayClose">Fechar</button>
+  </div>
+</div>
+
+<!-- Modal: single person status -->
+<div class="overlay" id="personOverlay">
+  <div class="sheet">
+    <span class="back-link" id="personBack">‹ Voltar para o dia</span>
+    <h3 id="personTitle">Pessoa</h3>
+    <div class="sub" id="personSub">Local do dia</div>
+    <button class="opt-btn" id="personPermuta"><span class="dot" style="background:var(--permuta)"></span>Marcar permuta</button>
+    <div class="field hidden" id="personSubField">
+      <label>Quem cobre (opcional)</label>
+      <input type="text" id="personSubInput" placeholder="Nome de quem vai cobrir">
+      <div class="row-btns">
+        <button class="btn btn-primary" id="personSubSave">Salvar permuta</button>
+      </div>
+    </div>
+    <button class="opt-btn" id="personFerias"><span class="dot" style="background:var(--ferias)"></span>Marcar férias</button>
+    <button class="opt-btn remove" id="personRemove">Remover marcação</button>
+    <button class="close-sheet" id="personClose">Cancelar</button>
+  </div>
+</div>
+
+<!-- Modal: settings -->
+<div class="overlay" id="settingsOverlay">
+  <div class="sheet">
+    <h3>Configurações</h3>
+    <div class="sub">Ajuste a data de referência caso a escala saia do ritmo (ex.: após permuta oficial de ciclo).</div>
+    <div class="settings-field">
+      <label>Um plantão confirmado em</label>
+      <input type="date" id="refDateInput">
+    </div>
+    <div class="row-btns">
+      <button class="btn btn-ghost" id="resetAllBtn">Apagar todas marcações</button>
+      <button class="btn btn-primary" id="saveRefBtn">Salvar</button>
+    </div>
+    <button class="close-sheet" id="settingsClose">Fechar</button>
+  </div>
+</div>
+
+<!-- Modal: team & locations -->
+<div class="overlay" id="teamOverlay">
+  <div class="sheet">
+    <h3>Equipe e locais</h3>
+    <div class="sub">O rodízio muda o local de cada pessoa a cada plantão, até passar pelos 6.</div>
+    <div class="settings-field">
+      <label>Pessoas</label>
+      <div class="team-grid" id="teamNamesGrid"></div>
+    </div>
+    <div class="settings-field">
+      <label>Locais</label>
+      <div class="team-grid" id="teamLocationsGrid"></div>
+    </div>
+    <div class="row-btns">
+      <button class="btn btn-primary" id="saveTeamBtn">Salvar equipe</button>
+    </div>
+    <div class="save-msg" id="teamMsg"></div>
+    <button class="close-sheet" id="teamClose">Fechar</button>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'plantao-config-v2';
+let config = {
+  referenceDate: null,
+  tags: {}, // key: `${dateStr}_${personIndex}` -> {type:'permuta'|'ferias', substitute?:string}
+  team: ['Pessoa 1','Pessoa 2','Pessoa 3','Pessoa 4','Pessoa 5','Pessoa 6'],
+  locations: ['Local 1','Local 2','Local 3','Local 4','Local 5','Local 6']
+};
+let viewDate = new Date();
+let selectedDayStr = null;
+let selectedPersonIdx = null;
+let rangeType = 'permuta';
+
+const $ = id => document.getElementById(id);
+
+function pad(n){ return n<10 ? '0'+n : ''+n; }
+function toDateStr(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function fromDateStr(s){ const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); }
+function startOfDay(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+function diffDays(a,b){ return Math.round((startOfDay(a) - startOfDay(b)) / 86400000); }
+
+function cycleN(d){
+  const ref = fromDateStr(config.referenceDate);
+  return diffDays(d, ref) / 4;
+}
+function cyclePosition(d){
+  const ref = fromDateStr(config.referenceDate);
+  const diff = diffDays(d, ref);
+  return ((diff % 4) + 4) % 4;
+}
+function isPlantaoDay(d){ return cyclePosition(d) === 0; }
+
+function locationForPerson(d, personIdx){
+  const n = Math.round(cycleN(d));
+  const idx = ((personIdx + n) % 6 + 6) % 6;
+  return config.locations[idx];
+}
+
+function tagKey(ds, idx){ return ds+'_'+idx; }
+
+async function loadConfig(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const loaded = JSON.parse(raw);
+      config = Object.assign(config, loaded);
+    }
+  }catch(e){
+    console.log('Sem configuração salva ainda, ou localStorage indisponível.', e);
+  }
+  if(!config.referenceDate){
+    config.referenceDate = toDateStr(new Date());
+    await saveConfig();
+  }
+  populateRangePersonSelect();
+  renderAll();
+}
+async function saveConfig(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(config)); }
+  catch(e){ console.error('Falha ao salvar (localStorage pode estar bloqueado neste navegador)', e); }
+}
+
+const monthNames = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+
+function renderRing(){
+  const today = new Date();
+  const pos = cyclePosition(today);
+  $('ringDay').textContent = (pos+1);
+  const segs = $('ringSegs');
+  segs.innerHTML = '';
+  const total = 4, r = 28, circumference = 2*Math.PI*r, gap = 4;
+  const segLen = circumference/total - gap;
+  const plantaoColor = getComputedStyle(document.documentElement).getPropertyValue('--plantao');
+  for(let i=0;i<total;i++){
+    const offset = i*(circumference/total);
+    const el = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    el.setAttribute('cx','32'); el.setAttribute('cy','32'); el.setAttribute('r',r);
+    el.setAttribute('class','seg');
+    el.setAttribute('stroke', i===pos ? plantaoColor : '#2a3547');
+    el.setAttribute('stroke-dasharray', segLen+' '+circumference);
+    el.setAttribute('stroke-dashoffset', -offset);
+    el.setAttribute('stroke-linecap','round');
+    segs.appendChild(el);
+  }
+  const today_is_plantao = isPlantaoDay(today);
+  $('todayLabel').textContent = today_is_plantao ? 'Hoje a equipe trabalha' : 'Hoje é folga da equipe';
+  $('todaySub').textContent = today.toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long' });
+
+  const teamBox = $('todayTeam');
+  if(today_is_plantao){
+    teamBox.classList.remove('hidden');
+    teamBox.innerHTML = '';
+    const ds = toDateStr(today);
+    for(let i=0;i<6;i++){
+      const tag = config.tags[tagKey(ds,i)];
+      const loc = locationForPerson(today, i);
+      const row = document.createElement('div');
+      row.className = 'trow';
+      let locHtml = loc;
+      if(tag && tag.type==='ferias') locHtml = '<span style="color:var(--ferias)">Férias</span>';
+      else if(tag && tag.type==='permuta') locHtml = '<span style="color:var(--permuta)">Permuta'+(tag.substitute?(' · '+tag.substitute):'')+'</span>';
+      row.innerHTML = '<span class="pname">'+config.team[i]+'</span><span class="ploc">'+locHtml+'</span>';
+      teamBox.appendChild(row);
+    }
+  } else {
+    teamBox.classList.add('hidden');
+  }
+}
+
+function renderCalendar(){
+  $('monthLabel').textContent = monthNames[viewDate.getMonth()] + ' de ' + viewDate.getFullYear();
+  const grid = $('grid');
+  grid.innerHTML = '';
+  const year = viewDate.getFullYear(), month = viewDate.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const startOffset = firstDay.getDay();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const todayStr = toDateStr(new Date());
+
+  for(let i=0;i<startOffset;i++){
+    const p = document.createElement('div'); p.className = 'cell pad'; grid.appendChild(p);
+  }
+  for(let day=1; day<=daysInMonth; day++){
+    const d = new Date(year, month, day);
+    const ds = toDateStr(d);
+    const plantao = isPlantaoDay(d);
+    const cell = document.createElement('div');
+    cell.className = 'cell ' + (plantao?'plantao':'') + (ds===todayStr ? ' today' : '');
+    cell.innerHTML = '<div class="n">'+day+'</div>';
+    if(plantao){
+      const marks = [];
+      for(let i=0;i<6;i++){
+        const tag = config.tags[tagKey(ds,i)];
+        if(tag) marks.push(tag.type);
+      }
+      if(marks.length){
+        const wrap = document.createElement('div');
+        wrap.className = 'marks';
+        const uniq = [...new Set(marks)];
+        uniq.forEach(t=>{
+          const s = document.createElement('span');
+          s.style.background = t==='permuta' ? 'var(--permuta)' : 'var(--ferias)';
+          wrap.appendChild(s);
+        });
+        cell.appendChild(wrap);
+      }
+    }
+    cell.addEventListener('click', () => openDayModal(ds));
+    grid.appendChild(cell);
+  }
+}
+
+function renderAll(){ renderRing(); renderCalendar(); }
+
+$('prevBtn').addEventListener('click', () => { viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth()-1, 1); renderCalendar(); });
+$('nextBtn').addEventListener('click', () => { viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth()+1, 1); renderCalendar(); });
+$('todayBtn').addEventListener('click', () => { viewDate = new Date(); renderCalendar(); });
+
+function openDayModal(ds){
+  selectedDayStr = ds;
+  const d = fromDateStr(ds);
+  const plantao = isPlantaoDay(d);
+  $('dayTitle').textContent = d.toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
+  const list = $('dayTeamList');
+  list.innerHTML = '';
+  if(!plantao){
+    $('daySub').textContent = 'Dia de folga da equipe inteira.';
+  } else {
+    $('daySub').textContent = 'Toque em uma pessoa para marcar permuta ou férias.';
+    for(let i=0;i<6;i++){
+      const tag = config.tags[tagKey(ds,i)];
+      const loc = locationForPerson(d, i);
+      const row = document.createElement('div');
+      row.className = 'person-row' + (tag ? ' tag-'+tag.type : '');
+      let locText = loc;
+      if(tag && tag.type==='ferias') locText = 'Férias';
+      else if(tag && tag.type==='permuta') locText = 'Permuta' + (tag.substitute ? (' · cobre: '+tag.substitute) : '');
+      row.innerHTML = '<div class="pinfo"><div class="nm">'+config.team[i]+'</div><div class="lc">'+locText+'</div></div><div class="chev">›</div>';
+      row.addEventListener('click', () => openPersonModal(ds, i));
+      list.appendChild(row);
+    }
+  }
+  $('dayOverlay').classList.add('open');
+}
+$('dayClose').addEventListener('click', () => $('dayOverlay').classList.remove('open'));
+$('dayOverlay').addEventListener('click', (e) => { if(e.target.id==='dayOverlay') $('dayOverlay').classList.remove('open'); });
+
+function openPersonModal(ds, idx){
+  selectedDayStr = ds; selectedPersonIdx = idx;
+  const d = fromDateStr(ds);
+  $('personTitle').textContent = config.team[idx];
+  $('personSub').textContent = d.toLocaleDateString('pt-BR', { day:'2-digit', month:'long' }) + ' · local previsto: ' + locationForPerson(d, idx);
+  $('personSubField').classList.add('hidden');
+  $('personSubInput').value = '';
+  $('dayOverlay').classList.remove('open');
+  $('personOverlay').classList.add('open');
+}
+$('personBack').addEventListener('click', () => { $('personOverlay').classList.remove('open'); openDayModal(selectedDayStr); });
+$('personClose').addEventListener('click', () => $('personOverlay').classList.remove('open'));
+$('personOverlay').addEventListener('click', (e) => { if(e.target.id==='personOverlay') $('personOverlay').classList.remove('open'); });
+
+$('personPermuta').addEventListener('click', () => { $('personSubField').classList.remove('hidden'); });
+$('personSubSave').addEventListener('click', async () => {
+  const sub = $('personSubInput').value.trim();
+  config.tags[tagKey(selectedDayStr, selectedPersonIdx)] = { type:'permuta', substitute: sub || null };
+  await saveConfig();
+  $('personOverlay').classList.remove('open');
+  renderAll();
+});
+$('personFerias').addEventListener('click', async () => {
+  config.tags[tagKey(selectedDayStr, selectedPersonIdx)] = { type:'ferias' };
+  await saveConfig();
+  $('personOverlay').classList.remove('open');
+  renderAll();
+});
+$('personRemove').addEventListener('click', async () => {
+  delete config.tags[tagKey(selectedDayStr, selectedPersonIdx)];
+  await saveConfig();
+  $('personOverlay').classList.remove('open');
+  renderAll();
+});
+
+// Range panel
+$('rangeToggle').addEventListener('click', () => {
+  $('rangePanel').classList.toggle('open');
+  $('rangeChevron').textContent = $('rangePanel').classList.contains('open') ? '▴' : '▾';
+});
+function populateRangePersonSelect(){
+  const sel = $('rangePerson');
+  sel.innerHTML = '';
+  config.team.forEach((name, i) => {
+    const opt = document.createElement('option');
+    opt.value = i; opt.textContent = name;
+    sel.appendChild(opt);
+  });
+}
+function setRangeType(t){
+  rangeType = t;
+  $('pickPermuta').classList.toggle('sel-permuta', t==='permuta');
+  $('pickFerias').classList.toggle('sel-ferias', t==='ferias');
+  $('substituteField').classList.toggle('hidden', t!=='permuta');
+}
+$('pickPermuta').addEventListener('click', () => setRangeType('permuta'));
+$('pickFerias').addEventListener('click', () => setRangeType('ferias'));
+setRangeType('permuta');
+
+$('applyRangeBtn').addEventListener('click', async () => {
+  const sVal = $('rangeStart').value, eVal = $('rangeEnd').value;
+  if(!sVal || !eVal){ $('rangeMsg').textContent = 'Preencha as duas datas.'; return; }
+  const personIdx = parseInt($('rangePerson').value, 10);
+  const sub = $('substituteInput').value.trim();
+  let s = fromDateStr(sVal), e = fromDateStr(eVal);
+  if(s > e){ [s,e] = [e,s]; }
+  let cur = new Date(s), count = 0;
+  while(cur <= e){
+    if(isPlantaoDay(cur)){
+      config.tags[tagKey(toDateStr(cur), personIdx)] = rangeType==='permuta' ? { type:'permuta', substitute: sub || null } : { type:'ferias' };
+      count++;
+    }
+    cur = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate()+1);
+  }
+  await saveConfig();
+  $('rangeMsg').textContent = count + ' plantão(ões) marcado(s) para ' + config.team[personIdx] + '.';
+  renderAll();
+});
+$('clearRangeBtn').addEventListener('click', async () => {
+  const sVal = $('rangeStart').value, eVal = $('rangeEnd').value;
+  if(!sVal || !eVal){ $('rangeMsg').textContent = 'Preencha as duas datas.'; return; }
+  const personIdx = parseInt($('rangePerson').value, 10);
+  let s = fromDateStr(sVal), e = fromDateStr(eVal);
+  if(s > e){ [s,e] = [e,s]; }
+  let cur = new Date(s);
+  while(cur <= e){
+    delete config.tags[tagKey(toDateStr(cur), personIdx)];
+    cur = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate()+1);
+  }
+  await saveConfig();
+  $('rangeMsg').textContent = 'Marcações removidas no período para ' + config.team[personIdx] + '.';
+  renderAll();
+});
+
+// Settings modal
+$('settingsBtn').addEventListener('click', () => {
+  $('refDateInput').value = config.referenceDate;
+  $('settingsOverlay').classList.add('open');
+});
+$('settingsClose').addEventListener('click', () => $('settingsOverlay').classList.remove('open'));
+$('settingsOverlay').addEventListener('click', (e) => { if(e.target.id==='settingsOverlay') $('settingsOverlay').classList.remove('open'); });
+$('saveRefBtn').addEventListener('click', async () => {
+  const v = $('refDateInput').value;
+  if(!v) return;
+  config.referenceDate = v;
+  await saveConfig();
+  $('settingsOverlay').classList.remove('open');
+  renderAll();
+});
+$('resetAllBtn').addEventListener('click', async () => {
+  if(confirm('Isso vai apagar todas as marcações de permuta e férias de toda a equipe. Continuar?')){
+    config.tags = {};
+    await saveConfig();
+    $('settingsOverlay').classList.remove('open');
+    renderAll();
+  }
+});
+
+// Team & locations modal
+function renderTeamModal(){
+  const namesGrid = $('teamNamesGrid');
+  const locsGrid = $('teamLocationsGrid');
+  namesGrid.innerHTML = '';
+  locsGrid.innerHTML = '';
+  for(let i=0;i<6;i+=2){
+    const pair1 = document.createElement('div'); pair1.className = 'team-pair';
+    for(let j=i;j<i+2 && j<6;j++){
+      const inp = document.createElement('input');
+      inp.type = 'text'; inp.id = 'teamName'+j; inp.value = config.team[j]; inp.placeholder = 'Pessoa '+(j+1);
+      pair1.appendChild(inp);
+    }
+    namesGrid.appendChild(pair1);
+    const pair2 = document.createElement('div'); pair2.className = 'team-pair';
+    for(let j=i;j<i+2 && j<6;j++){
+      const inp = document.createElement('input');
+      inp.type = 'text'; inp.id = 'teamLoc'+j; inp.value = config.locations[j]; inp.placeholder = 'Local '+(j+1);
+      pair2.appendChild(inp);
+    }
+    locsGrid.appendChild(pair2);
+  }
+}
+$('teamBtn').addEventListener('click', () => { renderTeamModal(); $('teamMsg').textContent=''; $('teamOverlay').classList.add('open'); });
+$('teamClose').addEventListener('click', () => $('teamOverlay').classList.remove('open'));
+$('teamOverlay').addEventListener('click', (e) => { if(e.target.id==='teamOverlay') $('teamOverlay').classList.remove('open'); });
+$('saveTeamBtn').addEventListener('click', async () => {
+  for(let j=0;j<6;j++){
+    const nm = $('teamName'+j).value.trim();
+    const lc = $('teamLoc'+j).value.trim();
+    config.team[j] = nm || ('Pessoa '+(j+1));
+    config.locations[j] = lc || ('Local '+(j+1));
+  }
+  await saveConfig();
+  populateRangePersonSelect();
+  $('teamMsg').textContent = 'Equipe salva!';
+  renderAll();
+});
+
+loadConfig();
+
+// PWA: registra o service worker (funcionamento offline)
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(e => console.log('SW falhou:', e));
+  });
+}
+
+// PWA: mostra botão de instalar quando o Android permitir
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const bar = document.getElementById('installBar');
+  if(bar) bar.style.display = 'flex';
+});
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('installBtn');
+  if(btn){
+    btn.addEventListener('click', async () => {
+      if(!deferredPrompt) return;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      document.getElementById('installBar').style.display = 'none';
+    });
+  }
+});
+</script>
+<div id="installBar">
+  <span>Instalar Plantão 24x72 como app?</span>
+  <button id="installBtn">Instalar</button>
+</div>
+</body>
+</html>
